@@ -2,13 +2,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:battleship="clr-namespace:Battleship"
+        xmlns:controls="clr-namespace:Battleship.Controls"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Battleship.MainWindow"
         Title="Battleship">
     <StackPanel Margin="20">
-        <Label>Testing</Label>
+        <StackPanel HorizontalAlignment="Center" Name="SetupPanel" Orientation="Horizontal">
+            <Button Click="PlaceCarrier">Αεροπλανοφόρο x</Button>
+            <Button>Αντιτορπιλικό</Button>
+            <Button>Πολεμικό</Button>
+            <Button>Υποβρύχιο</Button>
+        </StackPanel>
 
-        <battleship:BattleshipGrid Name="PlayerGrid" Height="500" Width="500"/>
+        <controls:BattleshipGrid Name="PlayerGrid" Height="500" Width="500"/>
     </StackPanel>
 </Window>
