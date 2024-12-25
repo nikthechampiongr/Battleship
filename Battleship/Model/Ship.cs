@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 
 namespace Battleship.Model;
 
@@ -20,10 +21,9 @@ public class Ship
     // Hit the ship! If health reaches 0 then the ship is considered destroyed and the function returns true.
     public bool Hit()
     {
-        Health -= 1;
+        Debug.Assert(Health > 0);
 
-        if (Health <= 0)
-            throw new InvalidOperationException("Hit a ship that is already dead");
+        Health -= 1;
 
         return Health == 0;
     }
