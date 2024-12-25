@@ -22,7 +22,14 @@ public class BattleshipGrid : Grid
     private readonly IBrush _hitColor = Brushes.Red;
     private readonly IBrush _emptyHitColor = Brushes.Black;
 
-    private Button? _selected;
+    private Cell? _selected;
+
+    public int? Selected {get {
+        if (_selected?.Name == null)
+            return null;
+
+        return int.Parse(_selected.Name);
+    }}
 
     public BattleshipGrid()
     {
@@ -65,10 +72,11 @@ public class BattleshipGrid : Grid
 
     private void Select(Cell cell)
     {
-        if (_selected != null)
-        {
-            _selected.Background = _defaultColor;
-        }
+        if (cell.IsOpenentHit)
+            return;
+
+        Deselect();
+
         _selected = cell;
         cell.Background = _selectedColor;
     }
@@ -77,7 +85,8 @@ public class BattleshipGrid : Grid
     {
         if (_selected != null)
         {
-            _selected.Background = _defaultColor;
+            // Hell expression: If the cell was not hit before we just want the default color bar. If it was hit we want to indicate whether the hit was successful or not
+            _selected.Background = _selected.IsOpenentHit ? _selected.IsOpenenetHitSuccessful ? _hitColor : _emptyHitColor : _defaultColor;
             _selected = null;
         }
     }
@@ -141,12 +150,10 @@ public class BattleshipGrid : Grid
         // Null coercion since if that is null something went horribly wrong during initialisation
         var idx = int.Parse(_selected.Name!);
 
-        // It should not be possible to select a hit Cell.
         if (Children[idx] is not Cell cell || cell.IsHit || cell.Content is not Rectangle rect)
-            throw new UnreachableException();
+            return false;
 
         cell.IsHit = true;
-        Deselect();
 
         rect.Fill = _emptyHitColor;
 
@@ -168,6 +175,9 @@ public class BattleshipGrid : Grid
     {
         if (Children[idx] is not Cell cell)
             throw new UnreachableException();
+
+        cell.IsOpenentHit = true;
+        cell.IsOpenenetHitSuccessful = hitSuccessful;
 
         if (hitSuccessful)
         {

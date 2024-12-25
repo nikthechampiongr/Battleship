@@ -8,4 +8,6 @@ public class Cell : Button
 {
     public Ship? Ship;
     public bool IsHit;
+    public bool IsOpenentHit;
+    public bool IsOpenenetHitSuccessful;
 }
