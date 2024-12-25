@@ -32,19 +32,19 @@ public class BattleshipGrid : Grid
             ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             for (int column = 0; column < Columns; column++)
             {
-                var cell = new Cell()
+                var cell = new Cell
                 {
                     Width = 50,
                     Height = 50,
                     Background = _defaultColor,
                     Margin = new Thickness(2),
-                    Name = $"{row * 10 + column}"
-                };
-                cell.Content = new Rectangle()
-                {
-                    Fill = _defaultColor,
-                    Height = 20,
-                    Width = 20,
+                    Name = $"{row * 10 + column}",
+                    Content = new Rectangle()
+                    {
+                        Fill = _defaultColor,
+                        Height = 20,
+                        Width = 20,
+                    }
                 };
 
                 cell.Click += (_, __) =>

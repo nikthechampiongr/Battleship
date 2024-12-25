@@ -3,11 +3,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:Battleship.Controls"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="700"
         x:Class="Battleship.MainWindow"
         Title="Battleship">
     <StackPanel Margin="20">
-        <StackPanel HorizontalAlignment="Center" Name="SetupPanel" Orientation="Horizontal">
+        <StackPanel HorizontalAlignment="Center" Margin="3" Name="SetupPanel" Orientation="Horizontal">
             <Button Click="PlaceCarrier">Αεροπλανοφόρο x</Button>
             <Button>Αντιτορπιλικό</Button>
             <Button>Πολεμικό</Button>
