@@ -14,6 +14,10 @@
             <Button>Υποβρύχιο</Button>
         </StackPanel>
 
-        <controls:BattleshipGrid Name="PlayerGrid" Height="500" Width="500"/>
+        <controls:BattleshipGrid Name="PlayerGrid" Height="550" Width="500"/>
+
+        <Button HorizontalAlignment="Center" Click="Hit" Margin="5">Simulate Hit</Button>
+        <Button HorizontalAlignment="Center" Click="SimulateSuccessfulHit" Margin="5">Simulate Successful Hit</Button>
+        <Button HorizontalAlignment="Center" Click="SimulateEnemyHit" Margin="5">Simulate Enemy Hit</Button>
     </StackPanel>
 </Window>
