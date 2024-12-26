@@ -31,6 +31,21 @@ public class BattleshipGrid : Grid
         return int.Parse(_selected.Name);
     }}
 
+    public void Reset()
+    {
+        _selected = null;
+
+        for (int idx = 0; idx < Rows * Columns; idx++)
+        {
+            if (Children[idx] is Cell cell && cell.Content is Rectangle rect)
+            {
+                cell.Background = _defaultColor;
+                cell.Reset();
+                rect.Fill = _defaultColor;
+            }
+        }
+    }
+
     public BattleshipGrid()
     {
         for (int row = 0; row < Rows; row++)
@@ -63,11 +78,6 @@ public class BattleshipGrid : Grid
                 Children.Add(cell);
             }
         }
-
-        // Might as well make this only show grid lines on debug
-        #if DEBUG
-        ShowGridLines = true;
-        #endif
     }
 
     private void Select(Cell cell)

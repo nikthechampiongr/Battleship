@@ -10,4 +10,13 @@ public class Cell : Button
     public bool IsHit;
     public bool IsOpenentHit;
     public bool IsOpenenetHitSuccessful;
+
+
+    public void Reset()
+    {
+        Ship = null;
+        IsHit = false;
+        IsOpenentHit = false;
+        IsOpenenetHitSuccessful = false;
+    }
 }

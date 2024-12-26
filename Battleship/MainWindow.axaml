@@ -8,16 +8,20 @@
         Title="Battleship">
     <StackPanel Margin="20">
         <StackPanel HorizontalAlignment="Center" Margin="3" Name="SetupPanel" Orientation="Horizontal">
-            <Button Click="PlaceCarrier">Αεροπλανοφόρο x</Button>
-            <Button>Αντιτορπιλικό</Button>
-            <Button>Πολεμικό</Button>
-            <Button>Υποβρύχιο</Button>
+            <Button Name="CarrierButton" Click="PlaceCarrier">Αεροπλανοφόρο x</Button>
+            <Button Name="DestroyerButton" Click="PlaceDestroyer">Αντιτορπιλικό</Button>
+            <Button Name="BattleshipButton" Click="PlaceBattleShip">Πολεμικό</Button>
+            <Button Name="SubmarineButton" Click="PlaceSubmarine">Υποβρύχιο</Button>
+            <Button Name="OrientationButton" Click="ChangeOrientation"> Προσανοτισμός: οριζόντιος</Button>
         </StackPanel>
 
         <controls:BattleshipGrid Name="PlayerGrid" Height="550" Width="500"/>
 
-        <Button HorizontalAlignment="Center" Click="Hit" Margin="5">Simulate Hit</Button>
-        <Button HorizontalAlignment="Center" Click="SimulateSuccessfulHit" Margin="5">Simulate Successful Hit</Button>
-        <Button HorizontalAlignment="Center" Click="SimulateEnemyHit" Margin="5">Simulate Enemy Hit</Button>
+        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+        <Button Click="Hit" Margin="5">Simulate Hit</Button>
+        <Button Click="SimulateSuccessfulHit" Margin="5">Simulate Successful Hit</Button>
+        <Button Click="SimulateEnemyHit" Margin="5">Simulate Enemy Hit</Button>
+        <Button Click="Reset">Reset</Button>
+        </StackPanel>
     </StackPanel>
 </Window>
