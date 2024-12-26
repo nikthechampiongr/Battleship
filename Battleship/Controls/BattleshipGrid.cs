@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia;
 using Avalonia.Controls;
@@ -155,7 +156,9 @@ public sealed class BattleshipGrid : Grid
     {
         hitShip = null;
 
-        if (Children[idx] is not Cell cell || cell.IsHit || cell.Content is not Rectangle rect)
+        Debug.Assert(CanHit(idx));
+
+        if (!CanHit(idx) || Children[idx] is not Cell cell || cell.Content is not Rectangle rect)
             return false;
 
         cell.IsHit = true;
@@ -178,6 +181,8 @@ public sealed class BattleshipGrid : Grid
     // Mark a cell as hit on the opponent's side
     public bool HitOther(bool hitSuccessful, int idx)
     {
+        Debug.Assert(CanHitOther(idx));
+
         if (!CanHitOther(idx) || Children[idx] is not Cell cell)
             return false;
 
@@ -186,14 +191,19 @@ public sealed class BattleshipGrid : Grid
 
         cell.Background = hitSuccessful ? _hitColor : _emptyHitColor;
 
+        Deselect();
+
         return true;
     }
 
     public bool CanHitOther(int idx)
     {
-        if (idx < 0 || idx >= TotalCells || Children[idx] is not Cell cell || cell.IsOpenentHit)
-            return false;
-        return true;
+        return idx is >= 0 and < TotalCells && Children[idx] is Cell cell && !cell.IsOpenentHit;
+    }
+
+    public bool CanHit(int idx)
+    {
+        return idx is >=0 and < TotalCells && Children[idx] is Cell cell && !cell.IsHit;
     }
 
     private void Place(Cell[] toPlace, Ship ship)

@@ -90,6 +90,9 @@ public partial class MainWindow : Window
 
     private async void BeginGame()
     {
+        if (HitButton == null)
+            return;
+
         await Send(new MetaMessage(MessageType.SetupComplete));
         var response = await Receive();
 
@@ -155,6 +158,7 @@ public partial class MainWindow : Window
 
         // Null coercion. It should not be possible for this to be null since we have a selected cell.
         if (PlayerGrid!.Hit(hit.Position, out var damaged))
+
         {
             if (damaged.Health <= 0)
             {
@@ -213,6 +217,7 @@ public partial class MainWindow : Window
         BattleshipButton.IsEnabled = true;
         SubmarineButton.IsEnabled = true;
         HitButton.IsVisible = false;
+        HitButton.IsEnabled = true;
         _remainingShips = CarrierCapacity + DestroyerCapacity + BattleshipCapacity + SubmarineCapacity;
     }
 

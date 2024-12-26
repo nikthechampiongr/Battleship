@@ -55,6 +55,7 @@ public sealed class AIOpponent : IOpponent
                         _gameState = GameState.Setup;
                         break;
                     case ShipHitMessage hit:
+                        _playspace.HitOther(true, _prevHit.Value);
                         // We hit something. Focus on the adjacent cells and hope we kill a ship
                         if (hit.SunkShip == null)
                         {
@@ -71,6 +72,7 @@ public sealed class AIOpponent : IOpponent
                         _gameState = GameState.AwaitingHit;
                         break;
                     case MetaMessage {MessageType: MessageType.HitMiss}:
+                        _playspace.HitOther(false, _prevHit.Value);
                         _gameState = GameState.AwaitingHit;
                         break;
                     default:
