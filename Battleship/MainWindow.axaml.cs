@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Battleship.Model;
@@ -7,6 +9,8 @@ namespace Battleship;
 
 public partial class MainWindow : Window
 {
+    private IOpponent _opponent;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -22,6 +26,8 @@ public partial class MainWindow : Window
     private int _remainingDestroyers = DestroyerCapacity;
     private int _remainingBattleships = BattleshipCapacity;
     private int _remainingSubmarines = SubmarineCapacity;
+
+    private int _remainingShips = CarrierCapacity + DestroyerCapacity + BattleshipCapacity + SubmarineCapacity;
 
     private Orientation _orientation = Orientation.Horizontal;
 
@@ -73,9 +79,24 @@ public partial class MainWindow : Window
 
     private void GoToNextStageIfPlacementComplete()
     {
-        if (_remainingCarriers <= 0 && _remainingDestroyers <= 0 && _remainingBattleships <= 0 &&
-            _remainingSubmarines <= 0 && SetupPanel != null)
-            SetupPanel.IsVisible = false;
+        if (_remainingCarriers > 0 || _remainingDestroyers > 0 || _remainingBattleships > 0 ||
+            _remainingSubmarines > 0 || SetupPanel == null)
+            return;
+
+        SetupPanel.IsVisible = false;
+
+        BeginGame();
+    }
+
+    private async void BeginGame()
+    {
+        await Send(new MetaMessage(MessageType.SetupComplete));
+        var response = await Receive();
+
+        // TODO: Reset on invalid response
+        Debug.Assert(response is { success: true, msg: MetaMessage { MessageType: MessageType.SetupComplete } });
+
+        HitButton.IsVisible = true;
     }
 
     private bool PlaceShip(ShipType ty)
@@ -88,32 +109,95 @@ public partial class MainWindow : Window
         return PlayerGrid.TryPlace(ship, _orientation);
     }
 
-    private void Hit(object? sender, RoutedEventArgs e)
+    private async void Hit(object? sender, RoutedEventArgs e)
     {
         var selected = PlayerGrid?.Selected;
 
-        if (selected == null)
+        if (selected == null || HitButton == null)
             return;
 
-        PlayerGrid?.HitOther(false, selected.Value);
-    }
+        HitButton.IsEnabled = false;
 
-    private void SimulateEnemyHit(object? sender, RoutedEventArgs e)
-    {
-        PlayerGrid?.Hit(out _);
-    }
+        await Send(new HitMessage(selected.Value));
 
-    private void SimulateSuccessfulHit(object? sender, RoutedEventArgs e)
-    {
-        var selected = PlayerGrid?.Selected;
+        var response = await Receive();
 
-        if (selected == null)
+
+        // TODO: Reset on invalid response
+        Debug.Assert(response.success);
+
+        switch (response.msg)
+        {
+            case ShipHitMessage hitMessage:
+                // TODO: Announce ship sinking
+                PlayerGrid?.HitOther(true, selected.Value);
+                break;
+            case SurrenderMessage surrender:
+                // TODO: Announce ship sinking and victory
+                // TODO: Make it not just reset the game but show stats
+                Reset();
+                return;
+            case MetaMessage { MessageType: MessageType.HitMiss} _:
+                PlayerGrid?.HitOther(false, selected.Value);
+                break;
+            default:
+                Debug.Fail($"Got unexpected message while awaiting a hit: {response.msg?.GetType()}");
+                break;
+        }
+
+        response = await Receive();
+
+        Debug.Assert(response is { success: true, msg: HitMessage });
+
+        // TODO: Reset on invalid response
+        if (response.msg is not HitMessage hit)
             return;
 
-        PlayerGrid?.HitOther(true, selected.Value);
+        // Null coercion. It should not be possible for this to be null since we have a selected cell.
+        if (PlayerGrid!.Hit(hit.Position, out var damaged))
+        {
+            if (damaged.Health <= 0)
+            {
+                _remainingShips -= 1;
+                if (_remainingShips <= 0)
+                {
+                    // TODO: Make it not just reset the game but show stats
+                    await Send(new SurrenderMessage(damaged.ShipType));
+                    Reset();
+                    return;
+                }
+
+                await Send(new ShipHitMessage(damaged.ShipType));
+            }
+            else
+            {
+                await Send(new ShipHitMessage(null));
+            }
+        }
+        else
+        {
+            await Send(new MetaMessage(MessageType.HitMiss));
+        }
+
+        HitButton.IsEnabled = true;
     }
 
-    private void Reset(object? sender, RoutedEventArgs routedEventArgs)
+    // This right now seems useless but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
+    private async Task<bool> Send(OpponentMessage msg)
+    {
+        await _opponent.SendMessage(msg);
+
+        return true;
+    }
+
+    // This right now seems useless but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
+    private async Task<(bool success, OpponentMessage? msg)> Receive()
+    {
+        var res = await _opponent.GetMessage();
+        return (true, res);
+    }
+
+    private void Reset()
     {
         PlayerGrid?.Reset();
         _remainingCarriers = CarrierCapacity;
@@ -121,13 +205,15 @@ public partial class MainWindow : Window
         _remainingBattleships = BattleshipCapacity;
         _remainingSubmarines = SubmarineCapacity;
         _orientation = Orientation.Horizontal;
-        if (SetupPanel == null || CarrierButton == null || DestroyerButton == null || BattleshipButton == null || SubmarineButton == null)
+        if (SetupPanel == null || CarrierButton == null || DestroyerButton == null || BattleshipButton == null || SubmarineButton == null || HitButton == null)
             return;
         SetupPanel.IsVisible = true;
         CarrierButton.IsEnabled = true;
         DestroyerButton.IsEnabled = true;
         BattleshipButton.IsEnabled = true;
         SubmarineButton.IsEnabled = true;
+        HitButton.IsVisible = false;
+        _remainingShips = CarrierCapacity + DestroyerCapacity + BattleshipCapacity + SubmarineCapacity;
     }
 
     private void ChangeOrientation(object? sender, RoutedEventArgs e)

@@ -151,15 +151,9 @@ public sealed class BattleshipGrid : Grid
     }
 
     // Hit the selected Cell. If the hit is successful the damaged ship is returned in the hitShip parameter.
-    public bool Hit([NotNullWhen(returnValue: true)] out Ship? hitShip)
+    public bool Hit(int idx, [NotNullWhen(returnValue: true)] out Ship? hitShip)
     {
         hitShip = null;
-
-        if (_selected == null)
-            return false;
-
-        // Null coercion since if that is null something went horribly wrong during initialisation
-        var idx = int.Parse(_selected.Name!);
 
         if (Children[idx] is not Cell cell || cell.IsHit || cell.Content is not Rectangle rect)
             return false;
@@ -184,7 +178,7 @@ public sealed class BattleshipGrid : Grid
     // Mark a cell as hit on the opponent's side
     public bool HitOther(bool hitSuccessful, int idx)
     {
-        if (CanHitOther(idx) || Children[idx] is not Cell cell)
+        if (!CanHitOther(idx) || Children[idx] is not Cell cell)
             return false;
 
         cell.IsOpenentHit = true;

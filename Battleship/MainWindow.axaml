@@ -15,13 +15,8 @@
             <Button Name="OrientationButton" Click="ChangeOrientation"> Προσανοτισμός: οριζόντιος</Button>
         </StackPanel>
 
-        <controls:BattleshipGrid Name="PlayerGrid" Height="550" Width="500"/>
+        <Button HorizontalAlignment="Center" Margin="3" IsVisible="False" Click="Hit" Name="HitButton">επίθεση</Button>
 
-        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-        <Button Click="Hit" Margin="5">Simulate Hit</Button>
-        <Button Click="SimulateSuccessfulHit" Margin="5">Simulate Successful Hit</Button>
-        <Button Click="SimulateEnemyHit" Margin="5">Simulate Enemy Hit</Button>
-        <Button Click="Reset">Reset</Button>
-        </StackPanel>
+        <controls:BattleshipGrid Name="PlayerGrid" Height="550" Width="500"/>
     </StackPanel>
 </Window>
