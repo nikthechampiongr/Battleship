@@ -3,17 +3,17 @@ using System.Diagnostics;
 
 namespace Battleship.Model;
 
-public class Ship
+public sealed class Ship
 {
-    private ShipType _shipType;
+    public readonly ShipType ShipType;
 
-    public int Width => (int) _shipType;
+    public int Width => (int) ShipType;
 
     public int Health;
 
     public Ship(ShipType shipType)
     {
-        _shipType = shipType;
+        ShipType = shipType;
 
         Health = Width;
     }

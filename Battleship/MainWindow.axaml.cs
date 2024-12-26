@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Battleship.Model;
+using Battleship.Opponent;
 
 namespace Battleship;
 
@@ -9,12 +10,13 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        _opponent = new AIOpponent();
     }
 
-    private const int CarrierCapacity = 1;
-    private const int DestroyerCapacity = 2;
-    private const int BattleshipCapacity = 3;
-    private const int SubmarineCapacity = 4;
+    public const int CarrierCapacity = 1;
+    public const int DestroyerCapacity = 2;
+    public const int BattleshipCapacity = 3;
+    public const int SubmarineCapacity = 4;
 
     private int _remainingCarriers = CarrierCapacity;
     private int _remainingDestroyers = DestroyerCapacity;
@@ -64,11 +66,9 @@ public partial class MainWindow : Window
         if(PlaceShip(ShipType.Submarine))
             _remainingSubmarines -= 1;
 
-        if (_remainingSubmarines <= 0 && SubmarineButton != null)
-        {
-            GoToNextStageIfPlacementComplete();
-            SubmarineButton.IsEnabled = false;
-        }
+        if (_remainingSubmarines > 0 || SubmarineButton == null) return;
+        GoToNextStageIfPlacementComplete();
+        SubmarineButton.IsEnabled = false;
     }
 
     private void GoToNextStageIfPlacementComplete()

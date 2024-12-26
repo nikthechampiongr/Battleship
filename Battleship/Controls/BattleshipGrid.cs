@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia;
 using Avalonia.Controls;
@@ -9,10 +8,12 @@ using Battleship.Model;
 namespace Battleship.Controls;
 
 // Mostly a convenience class that allows me to easily create a grid with extra logic and less setup in axaml.
-public class BattleshipGrid : Grid
+public sealed class BattleshipGrid : Grid
 {
-    private const int Rows = 10;
-    private const int Columns = 10;
+    // ReSharper disable once MemberCanBePrivate.Global
+    public const int Rows = 10;
+    public const int Columns = 10;
+    public const int TotalCells = Rows * Columns;
 
     private readonly IBrush _defaultColor = Brushes.Gray;
     private readonly IBrush _selectedColor = Brushes.Yellow;
@@ -29,7 +30,16 @@ public class BattleshipGrid : Grid
             return null;
 
         return int.Parse(_selected.Name);
-    }}
+    }
+        // This setter only exists for the AIOpponent.
+    set
+    {
+        if (value < 0 || value is null or >= TotalCells || Children[value.Value] is not Cell cell)
+            return;
+
+        Select(cell);
+    }
+    }
 
     public void Reset()
     {
@@ -37,7 +47,7 @@ public class BattleshipGrid : Grid
 
         for (int idx = 0; idx < Rows * Columns; idx++)
         {
-            if (Children[idx] is Cell cell && cell.Content is Rectangle rect)
+            if (Children[idx] is Cell { Content: Rectangle rect } cell)
             {
                 cell.Background = _defaultColor;
                 cell.Reset();
@@ -69,7 +79,7 @@ public class BattleshipGrid : Grid
                     }
                 };
 
-                cell.Click += (_, __) =>
+                cell.Click += (_, _) =>
                 {
                     Select(cell);
                 };
@@ -123,18 +133,9 @@ public class BattleshipGrid : Grid
 
         for (int i = 0; i < width; i++)
         {
-            Control candidate;
+            var candidate = orientation == Orientation.Horizontal ? Children[idx + i] : Children[idx + i * Columns];
 
-            if (orientation == Orientation.Horizontal)
-            {
-                candidate = Children[idx + i];
-            }
-            else
-            {
-                candidate = Children[idx + i * Columns];
-            }
-
-            if (candidate is Cell cell && cell.Ship == null)
+            if (candidate is Cell { Ship: null } cell)
             {
                 toOccupy[i] = cell;
             }
@@ -181,22 +182,24 @@ public class BattleshipGrid : Grid
 
 
     // Mark a cell as hit on the opponent's side
-    public void HitOther(bool hitSuccessful, int idx)
+    public bool HitOther(bool hitSuccessful, int idx)
     {
-        if (Children[idx] is not Cell cell)
-            throw new UnreachableException();
+        if (CanHitOther(idx) || Children[idx] is not Cell cell)
+            return false;
 
         cell.IsOpenentHit = true;
         cell.IsOpenenetHitSuccessful = hitSuccessful;
 
-        if (hitSuccessful)
-        {
-            cell.Background = _hitColor;
-        }
-        else
-        {
-            cell.Background = _emptyHitColor;
-        }
+        cell.Background = hitSuccessful ? _hitColor : _emptyHitColor;
+
+        return true;
+    }
+
+    public bool CanHitOther(int idx)
+    {
+        if (idx < 0 || idx >= TotalCells || Children[idx] is not Cell cell || cell.IsOpenentHit)
+            return false;
+        return true;
     }
 
     private void Place(Cell[] toPlace, Ship ship)
