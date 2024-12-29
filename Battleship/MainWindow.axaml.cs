@@ -229,12 +229,12 @@ public partial class MainWindow : Window
         if (_orientation == Orientation.Horizontal)
         {
             _orientation = Orientation.Vertical;
-            OrientationButton.Content = "Προσανατολισμός: κατακόρυφος";
+            OrientationButton.Content = "Orientation: vertical";
         }
         else
         {
             _orientation = Orientation.Horizontal;
-            OrientationButton.Content = "Προσανατολισμός: οριζόντιος";
+            OrientationButton.Content = "Orientation: horizontal";
         }
     }
 }
