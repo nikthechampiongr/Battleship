@@ -10,15 +10,15 @@ namespace Battleship.Opponent;
 // ReSharper disable once InconsistentNaming
 public sealed class AIOpponent : IOpponent
 {
-    private Random _rng;
-    private BattleshipGrid _playspace = new();
+    private readonly Random _rng;
+    private readonly BattleshipGrid _playspace = new();
 
     private GameState _gameState = GameState.Setup;
 
     // Normally the AI picks cells on the board at random. When this array is not empty however it will pick from these ones.
-    private List<int> _priorityCells = [];
+    private readonly List<int> _priorityCells = [];
 
-    private List<OpponentMessage> _messages = [];
+    private readonly List<OpponentMessage> _messages = [];
 
     private int? _prevHit;
 
@@ -64,7 +64,7 @@ public sealed class AIOpponent : IOpponent
                         else
                         {
                             // We sunk a ship. Reset the priority cells. Now this is a naive algorithm since theoretically
-                            // we could infer that other ships are in the area with other data but I do not feel like coding
+                            // we could infer that other ships are in the area with other data, but I do not feel like coding
                             // something like that right now.
                             _priorityCells.Clear();
                         }

@@ -186,7 +186,7 @@ public partial class MainWindow : Window
         HitButton.IsEnabled = true;
     }
 
-    // This right now seems useless but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
+    // This right now seems useless, but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
     private async Task<bool> Send(OpponentMessage msg)
     {
         await _opponent.SendMessage(msg);
@@ -194,7 +194,7 @@ public partial class MainWindow : Window
         return true;
     }
 
-    // This right now seems useless but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
+    // This right now seems useless, but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
     private async Task<(bool success, OpponentMessage? msg)> Receive()
     {
         var res = await _opponent.GetMessage();

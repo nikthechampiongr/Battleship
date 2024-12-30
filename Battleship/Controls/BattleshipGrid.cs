@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia;
@@ -29,7 +28,7 @@ public sealed class BattleshipGrid : Grid
     private readonly IBrush _markerColor = Brushes.Black;
     private readonly IBrush _markerTextColor = Brushes.White;
 
-    private Cell[] _cells = new Cell[Rows * Columns];
+    private readonly Cell[] _cells = new Cell[Rows * Columns];
 
     // If you add more than 26 Columns you will crash the program on startup. Except if you add more stuff here
     private readonly char[] _columnLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
@@ -265,7 +264,7 @@ public sealed class BattleshipGrid : Grid
         return idx is >= 0 and < TotalCells && !_cells[idx].IsOpenentHit;
     }
 
-    public bool CanHit(int idx)
+    private bool CanHit(int idx)
     {
         return idx is >=0 and < TotalCells && !_cells[idx].IsHit;
     }
