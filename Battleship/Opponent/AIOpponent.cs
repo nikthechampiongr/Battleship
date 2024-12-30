@@ -39,7 +39,7 @@ public sealed class AIOpponent : IOpponent
         switch (_gameState)
         {
             case GameState.Setup:
-                if (msg is not MetaMessage { MessageType: MessageType.SetupComplete})
+                if (msg is not SetupCompleteMessage)
                     throw new InvalidOperationException("A message other than SetupComplete was received when the game is not running");
                 Setup();
                 break;
@@ -71,7 +71,7 @@ public sealed class AIOpponent : IOpponent
 
                         _gameState = GameState.AwaitingHit;
                         break;
-                    case MetaMessage {MessageType: MessageType.HitMiss}:
+                    case HitMissedMessage:
                         _playspace.HitOther(false, _prevHit.Value);
                         _gameState = GameState.AwaitingHit;
                         break;
@@ -88,7 +88,7 @@ public sealed class AIOpponent : IOpponent
 
                 if (!_playspace.Hit(hitAttempt.Position, out var hitShip))
                 {
-                    _messages.Add(new MetaMessage(MessageType.HitMiss));
+                    _messages.Add(new HitMissedMessage());
                 } else if (hitShip.Health <= 0)
                 {
                     _remainingShips -= 1;
@@ -180,7 +180,7 @@ public sealed class AIOpponent : IOpponent
         }
         
         _gameState = GameState.AwaitingHit;
-        _messages.Add(new MetaMessage(MessageType.SetupComplete));
+        _messages.Add(new SetupCompleteMessage());
     }
 
     private void SpawnRandom(ShipType shipType)

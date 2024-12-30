@@ -15,15 +15,16 @@ namespace Battleship.Opponent;
 public abstract record OpponentMessage;
 
 /// <summary>
-/// A meta message is any message which is not an attempted hit against a cell.
-/// When we are doing multiplayer over the network, a byte that's received will be me a meta message if the most significant
-/// bit is 0.
+/// A message that is sent to indicate that a ship was hit in response to an attack.
 /// </summary>
-/// <param name="MessageType">The type of meta message received.</param>
-public sealed record MetaMessage(MessageType MessageType) : OpponentMessage;
-
+/// <param name="SunkShip">If the hit resulted in a ship sinking then this will be not null and null otherwise.</param>
 public sealed record ShipHitMessage(ShipType? SunkShip) : OpponentMessage;
 
+/// <summary>
+/// A message that is sent to indicate that the opposing player has surrendered after losing all their ships.
+/// This will always contain the final ship that was sunk.
+/// </summary>
+/// <param name="SunkMessage"></param>
 public sealed record SurrenderMessage(ShipType SunkMessage) : OpponentMessage;
 
 /// <summary>
@@ -33,6 +34,16 @@ public sealed record SurrenderMessage(ShipType SunkMessage) : OpponentMessage;
 /// </summary>
 /// <param name="Position">The cell idx being hit.</param>
 public sealed record HitMessage(int Position) : OpponentMessage;
+
+/// <summary>
+/// A message that indicates that the previous attack missed.
+/// </summary>
+public sealed record HitMissedMessage() : OpponentMessage;
+
+/// <summary>
+/// A message to indicate the opposing player has setup their ships and is ready to play.
+/// </summary>
+public sealed record SetupCompleteMessage() : OpponentMessage;
 
 [Flags]
 public enum MessageType : byte

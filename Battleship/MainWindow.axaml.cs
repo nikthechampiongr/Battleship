@@ -93,11 +93,11 @@ public partial class MainWindow : Window
         if (HitButton == null)
             return;
 
-        await Send(new MetaMessage(MessageType.SetupComplete));
+        await Send(new SetupCompleteMessage());
         var response = await Receive();
 
         // TODO: Reset on invalid response
-        Debug.Assert(response is { success: true, msg: MetaMessage { MessageType: MessageType.SetupComplete } });
+        Debug.Assert(response is { success: true, msg: SetupCompleteMessage });
 
         HitButton.IsVisible = true;
     }
@@ -140,7 +140,7 @@ public partial class MainWindow : Window
                 // TODO: Make it not just reset the game but show stats
                 Reset();
                 return;
-            case MetaMessage { MessageType: MessageType.HitMiss} _:
+            case HitMissedMessage _:
                 PlayerGrid?.HitOther(false, selected.Value);
                 break;
             default:
@@ -180,7 +180,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            await Send(new MetaMessage(MessageType.HitMiss));
+            await Send(new HitMissedMessage());
         }
 
         HitButton.IsEnabled = true;
