@@ -8,7 +8,7 @@
         Title="Battleship">
     <StackPanel Margin="20">
         <StackPanel HorizontalAlignment="Center" Margin="3" Name="SetupPanel" Orientation="Horizontal">
-            <Button Name="CarrierButton" Click="PlaceCarrier">Αεροπλανοφόρο x</Button>
+            <Button Name="CarrierButton" Click="PlaceCarrier">Αεροπλανοφόρο</Button>
             <Button Name="DestroyerButton" Click="PlaceDestroyer">Αντιτορπιλικό</Button>
             <Button Name="BattleshipButton" Click="PlaceBattleShip">Πολεμικό</Button>
             <Button Name="SubmarineButton" Click="PlaceSubmarine">Υποβρύχιο</Button>
