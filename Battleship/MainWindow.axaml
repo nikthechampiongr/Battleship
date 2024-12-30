@@ -8,7 +8,7 @@
         Title="Battleship">
     <StackPanel Margin="20">
         <StackPanel HorizontalAlignment="Center" Margin="3" Name="SetupPanel" Orientation="Horizontal">
-            <Button Name="CarrierButton" Click="PlaceCarrier">Carrier x</Button>
+            <Button Name="CarrierButton" Click="PlaceCarrier">Carrier</Button>
             <Button Name="DestroyerButton" Click="PlaceDestroyer">Destroyer</Button>
             <Button Name="BattleshipButton" Click="PlaceBattleShip">Battleship</Button>
             <Button Name="SubmarineButton" Click="PlaceSubmarine">Submarine</Button>
