@@ -93,11 +93,11 @@ public partial class MainWindow : Window
         if (HitButton == null)
             return;
 
-        await Send(new MetaMessage(MessageType.SetupComplete));
+        await Send(new SetupCompleteMessage());
         var response = await Receive();
 
         // TODO: Reset on invalid response
-        Debug.Assert(response is { success: true, msg: MetaMessage { MessageType: MessageType.SetupComplete } });
+        Debug.Assert(response is { success: true, msg: SetupCompleteMessage });
 
         HitButton.IsVisible = true;
     }
@@ -140,7 +140,7 @@ public partial class MainWindow : Window
                 // TODO: Make it not just reset the game but show stats
                 Reset();
                 return;
-            case MetaMessage { MessageType: MessageType.HitMiss} _:
+            case HitMissedMessage _:
                 PlayerGrid?.HitOther(false, selected.Value);
                 break;
             default:
@@ -180,13 +180,13 @@ public partial class MainWindow : Window
         }
         else
         {
-            await Send(new MetaMessage(MessageType.HitMiss));
+            await Send(new HitMissedMessage());
         }
 
         HitButton.IsEnabled = true;
     }
 
-    // This right now seems useless but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
+    // This right now seems useless, but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
     private async Task<bool> Send(OpponentMessage msg)
     {
         await _opponent.SendMessage(msg);
@@ -194,7 +194,7 @@ public partial class MainWindow : Window
         return true;
     }
 
-    // This right now seems useless but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
+    // This right now seems useless, but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
     private async Task<(bool success, OpponentMessage? msg)> Receive()
     {
         var res = await _opponent.GetMessage();

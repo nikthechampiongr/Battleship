@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Battleship.Model;
 
@@ -24,6 +25,14 @@ public sealed class BattleshipGrid : Grid
     private readonly IBrush _hitColor = Brushes.Red;
     private readonly IBrush _emptyHitColor = Brushes.Black;
 
+    private readonly IBrush _markerColor = Brushes.Black;
+    private readonly IBrush _markerTextColor = Brushes.White;
+
+    private readonly Cell[] _cells = new Cell[Rows * Columns];
+
+    // If you add more than 26 Columns you will crash the program on startup. Except if you add more stuff here
+    private readonly char[] _columnLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
+
     private Cell? _selected;
 
     public int? Selected {get {
@@ -35,10 +44,10 @@ public sealed class BattleshipGrid : Grid
         // This setter only exists for the AIOpponent.
     set
     {
-        if (value < 0 || value is null or >= TotalCells || Children[value.Value] is not Cell cell)
+        if (value is < 0 or null or >= TotalCells)
             return;
 
-        Select(cell);
+        Select(_cells[value.Value]);
     }
     }
 
@@ -46,32 +55,81 @@ public sealed class BattleshipGrid : Grid
     {
         _selected = null;
 
-        for (int idx = 0; idx < Rows * Columns; idx++)
+        foreach (var cell in _cells)
         {
-            if (Children[idx] is Cell { Content: Rectangle rect } cell)
-            {
-                cell.Background = _defaultColor;
-                cell.Reset();
-                rect.Fill = _defaultColor;
-            }
+            if (cell is not { Content: Rectangle rect }) continue;
+            cell.Background = _defaultColor;
+            cell.Reset();
+            rect.Fill = _defaultColor;
         }
     }
 
     public BattleshipGrid()
     {
-        for (int row = 0; row < Rows; row++)
+
+        for (int row = 0; row < Rows + 1; row++)
         {
             RowDefinitions.Add(new RowDefinition(GridLength.Star));
+
+        }
+
+        for (int column = 0; column < Columns + 1; column++)
+        {
             ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            for (int column = 0; column < Columns; column++)
+        }
+
+        for (int row = 1; row < Rows + 1; row++)
+        {
+            var marker = new Border()
             {
+                Width = 50,
+                Height = 50,
+                Background= _markerColor,
+                Child = new Label()
+                {
+                    Content = new TextBlock(){Text = row.ToString(), Foreground= _markerTextColor},
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                }
+            };
+            SetRow(marker, row);
+            SetColumn(marker, 0);
+            Children.Add(marker);
+        }
+
+        for (int column = 1; column < Columns + 1; column++)
+        {
+            var marker = new Border()
+            {
+                Width = 50,
+                Height = 50,
+                Background= _markerColor,
+                Child = new Label()
+                {
+                    Content = new TextBlock(){Text = _columnLetters[column - 1].ToString(), Foreground= _markerTextColor},
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                },
+                Margin = new Thickness(3)
+            };
+            SetRow(marker, 0);
+            SetColumn(marker, column);
+            Children.Add(marker);
+        }
+
+
+        for (int row = 1; row < Rows + 1; row++)
+        {
+            for (int column = 1; column < Columns + 1; column++)
+            {
+                var idx = (row - 1) * Columns + (column - 1);
                 var cell = new Cell
                 {
                     Width = 50,
                     Height = 50,
                     Background = _defaultColor,
                     Margin = new Thickness(2),
-                    Name = $"{row * 10 + column}",
+                    Name = idx.ToString(),
                     Content = new Rectangle()
                     {
                         Fill = _defaultColor,
@@ -87,6 +145,7 @@ public sealed class BattleshipGrid : Grid
                 SetRow(cell, row);
                 SetColumn(cell, column);
                 Children.Add(cell);
+                _cells[idx] = cell;
             }
         }
     }
@@ -134,11 +193,11 @@ public sealed class BattleshipGrid : Grid
 
         for (int i = 0; i < width; i++)
         {
-            var candidate = orientation == Orientation.Horizontal ? Children[idx + i] : Children[idx + i * Columns];
+            var candidate = orientation == Orientation.Horizontal ? _cells[idx + i] : _cells[idx + i * Columns];
 
-            if (candidate is Cell { Ship: null } cell)
+            if (candidate is { Ship: null })
             {
-                toOccupy[i] = cell;
+                toOccupy[i] = candidate;
             }
             else
             {
@@ -158,8 +217,10 @@ public sealed class BattleshipGrid : Grid
 
         Debug.Assert(CanHit(idx));
 
-        if (!CanHit(idx) || Children[idx] is not Cell cell || cell.Content is not Rectangle rect)
+        if (!CanHit(idx) || _cells[idx].Content is not Rectangle rect)
             return false;
+
+        var cell = _cells[idx];
 
         cell.IsHit = true;
 
@@ -183,8 +244,10 @@ public sealed class BattleshipGrid : Grid
     {
         Debug.Assert(CanHitOther(idx));
 
-        if (!CanHitOther(idx) || Children[idx] is not Cell cell)
+        if (!CanHitOther(idx))
             return false;
+
+        var cell = _cells[idx];
 
         cell.IsOpenentHit = true;
         cell.IsOpenenetHitSuccessful = hitSuccessful;
@@ -198,12 +261,12 @@ public sealed class BattleshipGrid : Grid
 
     public bool CanHitOther(int idx)
     {
-        return idx is >= 0 and < TotalCells && Children[idx] is Cell cell && !cell.IsOpenentHit;
+        return idx is >= 0 and < TotalCells && !_cells[idx].IsOpenentHit;
     }
 
-    public bool CanHit(int idx)
+    private bool CanHit(int idx)
     {
-        return idx is >=0 and < TotalCells && Children[idx] is Cell cell && !cell.IsHit;
+        return idx is >=0 and < TotalCells && !_cells[idx].IsHit;
     }
 
     private void Place(Cell[] toPlace, Ship ship)
