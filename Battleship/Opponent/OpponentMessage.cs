@@ -15,10 +15,9 @@ namespace Battleship.Opponent;
 public abstract record OpponentMessage;
 
 /// <summary>
-/// A message that is sent to indicate that a ship was hit in response to an attack.
+/// A message to indicate the opposing player has setup their ships and is ready to play.
 /// </summary>
-/// <param name="SunkShip">If the hit resulted in a ship sinking then this will be not null and null otherwise.</param>
-public sealed record ShipHitMessage(ShipType? SunkShip) : OpponentMessage;
+public sealed record SetupCompleteMessage() : OpponentMessage;
 
 /// <summary>
 /// A message that is sent to indicate that the opposing player has surrendered after losing all their ships.
@@ -28,22 +27,24 @@ public sealed record ShipHitMessage(ShipType? SunkShip) : OpponentMessage;
 public sealed record SurrenderMessage(ShipType SunkShip) : OpponentMessage;
 
 /// <summary>
+/// A message that indicates that the previous attack missed.
+/// </summary>
+public sealed record HitMissedMessage() : OpponentMessage;
+
+/// <summary>
+/// A message that is sent to indicate that a ship was hit in response to an attack.
+/// </summary>
+/// <param name="SunkShip">If the hit resulted in a ship sinking then this will be not null and null otherwise.</param>
+public sealed record ShipHitMessage(ShipType? SunkShip) : OpponentMessage;
+
+
+/// <summary>
 /// A message that signals a hit either against one of our opponent's cells or a cell of our own.
 /// When we are doing multiplayer over the network, a byte that's received will be a meta message if the most significant
 /// bit is 1.
 /// </summary>
 /// <param name="Position">The cell idx being hit.</param>
 public sealed record HitMessage(int Position) : OpponentMessage;
-
-/// <summary>
-/// A message that indicates that the previous attack missed.
-/// </summary>
-public sealed record HitMissedMessage() : OpponentMessage;
-
-/// <summary>
-/// A message to indicate the opposing player has setup their ships and is ready to play.
-/// </summary>
-public sealed record SetupCompleteMessage() : OpponentMessage;
 
 [Flags]
 public enum MessageType : byte
