@@ -33,3 +33,17 @@ public enum ShipType : byte
     Battleship = 3,
     Submarine = 2
 }
+
+public static class ShipTypeExtension {
+    public static string GetString(this ShipType shipType)
+    {
+        return shipType switch
+        {
+            ShipType.Carrier => "Αεροπλανοφόρο",
+            ShipType.Destroyer => "Αντιτορπιλικό",
+            ShipType.Battleship => "Πολεμικό",
+            ShipType.Submarine => "Υποβρύχιο",
+            _ => throw new UnreachableException()
+        };
+    }
+}

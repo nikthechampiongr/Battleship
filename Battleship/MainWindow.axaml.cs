@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -93,11 +94,14 @@ public partial class MainWindow : Window
         if (HitButton == null)
             return;
 
-        await Send(new SetupCompleteMessage());
+        if (!(await Send(new SetupCompleteMessage())))
+            return;
+
         var response = await Receive();
 
-        // TODO: Reset on invalid response
         Debug.Assert(response is { success: true, msg: SetupCompleteMessage });
+        if (!response.success)
+            return;
 
         HitButton.IsVisible = true;
     }
@@ -125,19 +129,18 @@ public partial class MainWindow : Window
 
         var response = await Receive();
 
-
-        // TODO: Reset on invalid response
-        Debug.Assert(response.success);
+        if (!response.success)
+            return;
 
         switch (response.msg)
         {
             case ShipHitMessage hitMessage:
-                // TODO: Announce ship sinking
+                if (hitMessage.SunkShip != null)
+                    SetAnnouncement($"Βυθίστηκε το {hitMessage.SunkShip.Value.GetString()} του αντίπαλου!", false);
                 PlayerGrid?.HitOther(true, selected.Value);
                 break;
             case SurrenderMessage surrender:
-                // TODO: Announce ship sinking and victory
-                // TODO: Make it not just reset the game but show stats
+                SetAnnouncement($"Νίκη! Βυθίστηκε το {surrender.SunkShip.GetString()} του αντίπαλου", true);
                 Reset();
                 return;
             case HitMissedMessage _:
@@ -145,16 +148,32 @@ public partial class MainWindow : Window
                 break;
             default:
                 Debug.Fail($"Got unexpected message while awaiting a hit: {response.msg?.GetType()}");
+                SetAnnouncement("Ο αντίπαλος έστειλε μη έγκυρη απάντηση. Το παιχνίδι είναι ισοπαλία", true);
+                Reset();
                 break;
         }
 
-        response = await Receive();
+        ExpectHit();
+    }
+
+    private async void ExpectHit()
+    {
+        if (HitButton == null)
+            return;
+
+        var response = await Receive();
+
+        if (!response.success)
+            return;
 
         Debug.Assert(response is { success: true, msg: HitMessage });
 
-        // TODO: Reset on invalid response
         if (response.msg is not HitMessage hit)
+        {
+            SetAnnouncement("Ο αντίπαλος έστειλε μη έγκυρη απάντηση. Το παιχνίδι είναι ισοπαλία", true);
+            Reset();
             return;
+        }
 
         // Null coercion. It should not be possible for this to be null since we have a selected cell.
         if (PlayerGrid!.Hit(hit.Position, out var damaged))
@@ -165,22 +184,27 @@ public partial class MainWindow : Window
                 _remainingShips -= 1;
                 if (_remainingShips <= 0)
                 {
-                    // TODO: Make it not just reset the game but show stats
-                    await Send(new SurrenderMessage(damaged.ShipType));
+                    if (!(await Send(new SurrenderMessage(damaged.ShipType))))
+                        return;
+                    SetAnnouncement($"Ήττα! Βυθίστηκε το {damaged.ShipType.GetString()} μου!", true);
                     Reset();
                     return;
                 }
 
-                await Send(new ShipHitMessage(damaged.ShipType));
+                SetOpponentAnnouncement($"Βυθίστηκε το {damaged.ShipType.GetString()} μου!");
+                if (!await Send(new ShipHitMessage(damaged.ShipType)))
+                    return;
             }
             else
             {
-                await Send(new ShipHitMessage(null));
+                if (!(await Send(new ShipHitMessage(null))))
+                    return;
             }
         }
         else
         {
-            await Send(new HitMissedMessage());
+            if (!(await Send(new HitMissedMessage())))
+                return;
         }
 
         HitButton.IsEnabled = true;
@@ -189,7 +213,15 @@ public partial class MainWindow : Window
     // This right now seems useless, but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
     private async Task<bool> Send(OpponentMessage msg)
     {
-        await _opponent.SendMessage(msg);
+        try {
+            await _opponent.SendMessage(msg);
+        }
+        catch (Exception e)
+        {
+            SetAnnouncement("Ο αντίπαλος αποσυνδέθηκε. Το παιχνίδι είναι ισοπαλία.", true);
+            Reset();
+            return false;
+        }
 
         return true;
     }
@@ -197,8 +229,18 @@ public partial class MainWindow : Window
     // This right now seems useless, but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
     private async Task<(bool success, OpponentMessage? msg)> Receive()
     {
-        var res = await _opponent.GetMessage();
-        return (true, res);
+        OpponentMessage? msg;
+        try
+        {
+            msg = await _opponent.GetMessage();
+        }
+        catch (Exception e)
+        {
+            SetAnnouncement("Ο αντίπαλος αποσυνδέθηκε. Το παιχνίδι είναι ισοπαλία.", true);
+            return (false, null);
+        }
+
+        return (true, msg);
     }
 
     private void Reset()
@@ -236,5 +278,26 @@ public partial class MainWindow : Window
             _orientation = Orientation.Horizontal;
             OrientationButton.Content = "Προσανατολισμός: οριζόντιος";
         }
+    }
+
+    private void SetAnnouncement(string announcement, bool final)
+    {
+        if (AnnouncementText == null || OpponentAnnouncementText == null)
+            return;
+
+        if (final)
+            OpponentAnnouncementText.IsVisible = false;
+
+        AnnouncementText.IsVisible = true;
+        AnnouncementText.Text = announcement;
+    }
+
+    private void SetOpponentAnnouncement(string announcement)
+    {
+        if (OpponentAnnouncementText == null)
+            return;
+
+        OpponentAnnouncementText.IsVisible = true;
+        OpponentAnnouncementText.Text = announcement;
     }
 }

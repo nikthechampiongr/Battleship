@@ -16,7 +16,9 @@
         </StackPanel>
 
         <Button HorizontalAlignment="Center" Margin="3" IsVisible="False" Click="Hit" Name="HitButton">επίθεση</Button>
+        <controls:BattleshipGrid Name="PlayerGrid" Width="600"/>
 
-        <controls:BattleshipGrid Name="PlayerGrid" Height="550" Width="500"/>
+        <TextBlock Name="AnnouncementText" Margin="5" IsVisible="False" HorizontalAlignment="Center">You should not be seeing this</TextBlock>
+        <TextBlock Name="OpponentAnnouncementText" Margin="5" IsVisible="False" HorizontalAlignment="Center">You should not be seeing this</TextBlock>
     </StackPanel>
 </Window>

@@ -24,8 +24,8 @@ public sealed record ShipHitMessage(ShipType? SunkShip) : OpponentMessage;
 /// A message that is sent to indicate that the opposing player has surrendered after losing all their ships.
 /// This will always contain the final ship that was sunk.
 /// </summary>
-/// <param name="SunkMessage"></param>
-public sealed record SurrenderMessage(ShipType SunkMessage) : OpponentMessage;
+/// <param name="SunkShip"></param>
+public sealed record SurrenderMessage(ShipType SunkShip) : OpponentMessage;
 
 /// <summary>
 /// A message that signals a hit either against one of our opponent's cells or a cell of our own.

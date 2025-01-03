@@ -110,7 +110,6 @@ public sealed class BattleshipGrid : Grid
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
                 },
-                Margin = new Thickness(3)
             };
             SetRow(marker, 0);
             SetColumn(marker, column);
