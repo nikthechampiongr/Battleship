@@ -1,8 +1,8 @@
 using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using Avalonia.Controls;
-using Avalonia.Interactivity;
+using System.Threading.Tasks; using Avalonia.Controls; using Avalonia.Interactivity;
+using Avalonia.Threading;
+using Battleship.Db;
 using Battleship.Model;
 using Battleship.Opponent;
 
@@ -11,12 +11,6 @@ namespace Battleship;
 public partial class MainWindow : Window
 {
     private IOpponent _opponent;
-
-    public MainWindow()
-    {
-        InitializeComponent();
-        _opponent = new AIOpponent();
-    }
 
     public const int CarrierCapacity = 1;
     public const int DestroyerCapacity = 2;
@@ -30,7 +24,28 @@ public partial class MainWindow : Window
 
     private int _remainingShips = CarrierCapacity + DestroyerCapacity + BattleshipCapacity + SubmarineCapacity;
 
+    private DispatcherTimer _gameTimer;
+    private TimeSpan _gametime;
+    private uint _turns = 0;
+
     private Orientation _orientation = Orientation.Horizontal;
+
+    public MainWindow()
+    {
+        InitializeComponent();
+        _gameTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, SetTime);
+        _gameTimer.IsEnabled = false;
+        _opponent = new AIOpponent();
+    }
+
+    private void SetTime(object? sender, EventArgs e)
+    {
+        if (GameTime == null)
+            return;
+
+        var time = DateTime.Now.TimeOfDay - _gametime;
+        GameTime.Text = $"{time.Minutes:00}:{time.Seconds:00}";
+    }
 
     private void PlaceCarrier(object? sender, RoutedEventArgs e)
     {
@@ -97,6 +112,10 @@ public partial class MainWindow : Window
         if (!(await Send(new SetupCompleteMessage())))
             return;
 
+        _gametime = DateTime.Now.TimeOfDay;
+        _gameTimer.IsEnabled = true;
+        _turns = 0;
+
         var response = await Receive();
 
         Debug.Assert(response is { success: true, msg: SetupCompleteMessage });
@@ -124,6 +143,7 @@ public partial class MainWindow : Window
             return;
 
         HitButton.IsEnabled = false;
+        _turns += 1;
 
         await Send(new HitMessage(selected.Value));
 
@@ -141,7 +161,7 @@ public partial class MainWindow : Window
                 break;
             case SurrenderMessage surrender:
                 SetAnnouncement($"Νίκη! Βυθίστηκε το {surrender.SunkShip.GetString()} του αντίπαλου", true);
-                Reset();
+                Reset(Outcome.Victory);
                 return;
             case HitMissedMessage _:
                 PlayerGrid?.HitOther(false, selected.Value);
@@ -149,7 +169,7 @@ public partial class MainWindow : Window
             default:
                 Debug.Fail($"Got unexpected message while awaiting a hit: {response.msg?.GetType()}");
                 SetAnnouncement("Ο αντίπαλος έστειλε μη έγκυρη απάντηση. Το παιχνίδι είναι ισοπαλία", true);
-                Reset();
+                Reset(Outcome.Draw);
                 break;
         }
 
@@ -171,7 +191,7 @@ public partial class MainWindow : Window
         if (response.msg is not HitMessage hit)
         {
             SetAnnouncement("Ο αντίπαλος έστειλε μη έγκυρη απάντηση. Το παιχνίδι είναι ισοπαλία", true);
-            Reset();
+            Reset(Outcome.Draw);
             return;
         }
 
@@ -187,7 +207,7 @@ public partial class MainWindow : Window
                     if (!(await Send(new SurrenderMessage(damaged.ShipType))))
                         return;
                     SetAnnouncement($"Ήττα! Βυθίστηκε το {damaged.ShipType.GetString()} μου!", true);
-                    Reset();
+                    Reset(Outcome.Defeat);
                     return;
                 }
 
@@ -216,10 +236,10 @@ public partial class MainWindow : Window
         try {
             await _opponent.SendMessage(msg);
         }
-        catch (Exception e)
+        catch (Exception _)
         {
             SetAnnouncement("Ο αντίπαλος αποσυνδέθηκε. Το παιχνίδι είναι ισοπαλία.", true);
-            Reset();
+            Reset(Outcome.Draw);
             return false;
         }
 
@@ -234,7 +254,7 @@ public partial class MainWindow : Window
         {
             msg = await _opponent.GetMessage();
         }
-        catch (Exception e)
+        catch (Exception _)
         {
             SetAnnouncement("Ο αντίπαλος αποσυνδέθηκε. Το παιχνίδι είναι ισοπαλία.", true);
             return (false, null);
@@ -243,7 +263,7 @@ public partial class MainWindow : Window
         return (true, msg);
     }
 
-    private void Reset()
+    private void Reset(Outcome outcome)
     {
         PlayerGrid?.Reset();
         _remainingCarriers = CarrierCapacity;
@@ -251,7 +271,7 @@ public partial class MainWindow : Window
         _remainingBattleships = BattleshipCapacity;
         _remainingSubmarines = SubmarineCapacity;
         _orientation = Orientation.Horizontal;
-        if (SetupPanel == null || CarrierButton == null || DestroyerButton == null || BattleshipButton == null || SubmarineButton == null || HitButton == null)
+        if (SetupPanel == null || CarrierButton == null || DestroyerButton == null || BattleshipButton == null || SubmarineButton == null || HitButton == null || GameTime == null)
             return;
         SetupPanel.IsVisible = true;
         CarrierButton.IsEnabled = true;
@@ -260,7 +280,12 @@ public partial class MainWindow : Window
         SubmarineButton.IsEnabled = true;
         HitButton.IsVisible = false;
         HitButton.IsEnabled = true;
+        GameTime.IsVisible = false;
         _remainingShips = CarrierCapacity + DestroyerCapacity + BattleshipCapacity + SubmarineCapacity;
+        if (outcome == Outcome.Draw)
+            return;
+
+        DbManager.InsertGame(outcome == Outcome.Victory, _turns, DateTime.Now.TimeOfDay - _gametime);
     }
 
     private void ChangeOrientation(object? sender, RoutedEventArgs e)
@@ -299,5 +324,12 @@ public partial class MainWindow : Window
 
         OpponentAnnouncementText.IsVisible = true;
         OpponentAnnouncementText.Text = announcement;
+    }
+
+    private enum Outcome
+    {
+        Victory,
+        Draw,
+        Defeat
     }
 }

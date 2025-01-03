@@ -7,6 +7,7 @@
         x:Class="Battleship.MainWindow"
         Title="Battleship">
     <StackPanel Margin="20">
+        <TextBlock Name="GameTime" HorizontalAlignment="Center"/>
         <StackPanel HorizontalAlignment="Center" Margin="3" Name="SetupPanel" Orientation="Horizontal">
             <Button Name="CarrierButton" Click="PlaceCarrier">Αεροπλανοφόρο</Button>
             <Button Name="DestroyerButton" Click="PlaceDestroyer">Αντιτορπιλικό</Button>

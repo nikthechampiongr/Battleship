@@ -1,6 +1,9 @@
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
+using Battleship.Db;
 
 namespace Battleship;
 
@@ -11,14 +14,17 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
-    public override void OnFrameworkInitializationCompleted()
+    public override async void OnFrameworkInitializationCompleted()
     {
+        await DbManager.InitDb();
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new MainWindow()
             {
                 Width = 850,
-                Height = 700
+                Height = 700,
+                Background = Brushes.Black,
             };
         }
 
