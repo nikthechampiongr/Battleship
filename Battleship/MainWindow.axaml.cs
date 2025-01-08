@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -14,7 +15,7 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
-    private void ConnectButton_OnClick(object? sender, RoutedEventArgs e)
+    private async void ConnectButton_OnClick(object? sender, RoutedEventArgs e)
     {
         if (AddressField?.Text is null or "")
             return;
@@ -27,11 +28,11 @@ public partial class MainWindow : Window
 
         var opponent = new NetOpponent(socket);
 
-        Start(opponent, false);
+        await Start(opponent, false);
         socket.Shutdown(SocketShutdown.Both);
     }
 
-    private void HostButton_OnClick(object? sender, RoutedEventArgs e)
+    private async void HostButton_OnClick(object? sender, RoutedEventArgs e)
     {
         var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
 
@@ -43,11 +44,11 @@ public partial class MainWindow : Window
 
         var opponent = new NetOpponent(conn);
 
-        Start(opponent, true);
+        await Start(opponent, true);
         conn.Shutdown(SocketShutdown.Both);
     }
 
-    private async void Start(IOpponent opponent, bool startFirst)
+    private async Task Start(IOpponent opponent, bool startFirst)
     {
 
         var battleship = new BattleshipWindow(opponent, startFirst)

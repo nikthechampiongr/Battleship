@@ -6,11 +6,11 @@
         x:Class="Battleship.MainWindow"
         Title="MainWindow">
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <Button Name="OfflineButton" Click="OfflineButton_OnClick" Margin="1">Play Offline</Button>
+                <Button Name="OfflineButton" Click="OfflineButton_OnClick" Margin="1">Παίξε με AI</Button>
                 <Separator/>
                 <Button Click="HostButton_OnClick" Name="HostButton" Margin="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"><Label HorizontalAlignment="Center">Host</Label></Button>
                 <Separator/>
-                <TextBox Name="AddressField" Margin="1" Watermark="Address"/>
+                <TextBox Name="AddressField" Margin="2" Watermark="Address"/>
                 <Button Name="ConnectButton" Click="ConnectButton_OnClick" Margin="1" HorizontalAlignment="Center"><Label VerticalAlignment="Center">Connect</Label></Button>
                 <Separator/>
                 <TextBlock Name="WinText" HorizontalAlignment="Center"/>
