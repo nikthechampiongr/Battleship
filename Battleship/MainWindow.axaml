@@ -2,24 +2,20 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:controls="clr-namespace:Battleship.Controls"
-        mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="700"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="800"
         x:Class="Battleship.MainWindow"
-        Title="Battleship">
-    <StackPanel Margin="20">
-        <TextBlock Name="GameTime" HorizontalAlignment="Center"/>
-        <StackPanel HorizontalAlignment="Center" Margin="3" Name="SetupPanel" Orientation="Horizontal">
-            <Button Name="CarrierButton" Click="PlaceCarrier">Αεροπλανοφόρο</Button>
-            <Button Name="DestroyerButton" Click="PlaceDestroyer">Αντιτορπιλικό</Button>
-            <Button Name="BattleshipButton" Click="PlaceBattleShip">Πολεμικό</Button>
-            <Button Name="SubmarineButton" Click="PlaceSubmarine">Υποβρύχιο</Button>
-            <Button Name="OrientationButton" Click="ChangeOrientation"> Προσανοτισμός: οριζόντιος</Button>
+        Title="MainWindow">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Button Name="OfflineButton" Click="OfflineButton_OnClick" Margin="1">Play Offline</Button>
+                <Separator/>
+                <Button Click="HostButton_OnClick" Name="HostButton" Margin="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"><Label HorizontalAlignment="Center">Host</Label></Button>
+                <Separator/>
+                <TextBox Name="AddressField" Margin="1" Watermark="Address"/>
+                <Button Name="ConnectButton" Click="ConnectButton_OnClick" Margin="1" HorizontalAlignment="Center"><Label VerticalAlignment="Center">Connect</Label></Button>
+                <Separator/>
+                <TextBlock Name="WinText" HorizontalAlignment="Center"/>
+                <TextBlock Name="LossText" HorizontalAlignment="Center"/>
+                <TextBlock Name="TimePlayedText" HorizontalAlignment="Center"/>
+                <TextBlock Name="TurnsPlayedText" HorizontalAlignment="Center"/>
         </StackPanel>
-
-        <Button HorizontalAlignment="Center" Margin="3" IsVisible="False" Click="Hit" Name="HitButton">επίθεση</Button>
-        <controls:BattleshipGrid Name="PlayerGrid" Width="600"/>
-
-        <TextBlock Name="AnnouncementText" Margin="5" IsVisible="False" HorizontalAlignment="Center">You should not be seeing this</TextBlock>
-        <TextBlock Name="OpponentAnnouncementText" Margin="5" IsVisible="False" HorizontalAlignment="Center">You should not be seeing this</TextBlock>
-    </StackPanel>
 </Window>

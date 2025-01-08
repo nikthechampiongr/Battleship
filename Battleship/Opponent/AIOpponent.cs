@@ -157,24 +157,24 @@ public sealed class AIOpponent : IOpponent
     {
         _playspace.Reset();
 
-        _remainingShips = MainWindow.CarrierCapacity + MainWindow.DestroyerCapacity + MainWindow.DestroyerCapacity + MainWindow.SubmarineCapacity;
+        _remainingShips = BattleshipWindow.CarrierCapacity + BattleshipWindow.DestroyerCapacity + BattleshipWindow.DestroyerCapacity + BattleshipWindow.SubmarineCapacity;
 
-        for (int i = 0; i < MainWindow.CarrierCapacity; i++)
+        for (int i = 0; i < BattleshipWindow.CarrierCapacity; i++)
         {
             SpawnRandom(ShipType.Carrier);
         }
         
-        for (int i = 0; i < MainWindow.DestroyerCapacity; i++)
+        for (int i = 0; i < BattleshipWindow.DestroyerCapacity; i++)
         {
             SpawnRandom(ShipType.Destroyer);
         }
         
-        for (int i = 0; i < MainWindow.BattleshipCapacity; i++)
+        for (int i = 0; i < BattleshipWindow.BattleshipCapacity; i++)
         {
             SpawnRandom(ShipType.Battleship);
         }
 
-        for (int i = 0; i < MainWindow.SubmarineCapacity; i++)
+        for (int i = 0; i < BattleshipWindow.SubmarineCapacity; i++)
         {
             SpawnRandom(ShipType.Submarine);
         }

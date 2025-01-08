@@ -1,9 +1,12 @@
 using System;
+using System.Net;
+using System.Net.Sockets;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Battleship.Db;
+using Battleship.Opponent;
 
 namespace Battleship;
 
@@ -22,9 +25,8 @@ public partial class App : Application
         {
             desktop.MainWindow = new MainWindow()
             {
-                Width = 850,
-                Height = 700,
-                Background = Brushes.Black,
+                Width = 450,
+                Height = 800
             };
         }
 
