@@ -1,24 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 using Battleship.Controls;
 using Battleship.Model;
 
 namespace Battleship.Opponent;
 
 // ReSharper disable once InconsistentNaming
-public sealed class AIOpponent : IOpponent
+public sealed class AIOpponent
 {
     private readonly Random _rng;
     private readonly BattleshipGrid _playspace = new();
 
-    private GameState _gameState = GameState.Setup;
+    private GameState _gameState;
 
     // Normally the AI picks cells on the board at random. When this array is not empty however it will pick from these ones.
     private readonly List<int> _priorityCells = [];
-
-    private readonly List<OpponentMessage> _messages = [];
 
     private int? _prevHit;
 
@@ -32,87 +30,76 @@ public sealed class AIOpponent : IOpponent
         #else
         _rng = new Random();
         #endif
+
+        Setup();
     }
 
-    public Task SendMessage(OpponentMessage msg)
+    public void GetHitResult(bool success, bool shipSunk, bool surrender)
     {
-        switch (_gameState)
+        if (_gameState != GameState.AwaitingHitResult)
+            throw new InvalidOperationException("Invalid game state reached: Got hit results while not waiting for hit results.");
+
+        if (_prevHit == null)
+            throw new UnreachableException("We are somehow expecting a hit result while not having fired before");
+
+        _playspace.Selected = _prevHit;
+
+        _gameState = GameState.AwaitingHit;
+
+        // Game over. Reset.
+        if (surrender)
         {
-            case GameState.Setup:
-                if (msg is not SetupCompleteMessage)
-                    throw new InvalidOperationException("A message other than SetupComplete was received when the game is not running");
-                Setup();
-                break;
-            case GameState.AwaitingHitResult:
-                if (_prevHit == null)
-                    throw new UnreachableException("We are somehow expected hit results while not having fired before");
-
-                _playspace.Selected = _prevHit;
-                switch (msg)
-                {
-                    // Game over. Reset.
-                    case SurrenderMessage:
-                        _gameState = GameState.Setup;
-                        break;
-                    case ShipHitMessage hit:
-                        _playspace.HitOther(true, _prevHit.Value);
-                        // We hit something. Focus on the adjacent cells and hope we kill a ship
-                        if (hit.SunkShip == null)
-                        {
-                            AssignPriorityCells(_prevHit.Value);
-                        }
-                        else
-                        {
-                            // We sunk a ship. Reset the priority cells. Now this is a naive algorithm since theoretically
-                            // we could infer that other ships are in the area with other data, but I do not feel like coding
-                            // something like that right now.
-                            _priorityCells.Clear();
-                        }
-
-                        _gameState = GameState.AwaitingHit;
-                        break;
-                    case HitMissedMessage:
-                        _playspace.HitOther(false, _prevHit.Value);
-                        _gameState = GameState.AwaitingHit;
-                        break;
-                    default:
-                        throw new InvalidOperationException($"Unexpected message while awaiting hit result: {msg.GetType()}.");
-                }
-                break;
-            case GameState.AwaitingHit:
-
-                if (msg is not HitMessage hitAttempt)
-                {
-                    throw new InvalidOperationException($"Unexpected message while awaiting hit: {msg.GetType()}. We are expected a hit from the player.");
-                }
-
-                if (!_playspace.Hit(hitAttempt.Position, out var hitShip))
-                {
-                    _messages.Add(new HitMissedMessage());
-                } else if (hitShip.Health <= 0)
-                {
-                    _remainingShips -= 1;
-                    // We lost. Reset
-                    if (_remainingShips <= 0)
-                    {
-                        _messages.Add(new SurrenderMessage(hitShip.ShipType));
-                        _gameState = GameState.Setup;
-                        break;
-                    }
-                    _messages.Add(new ShipHitMessage(hitShip.ShipType));
-                }
-                else
-                {
-                    _messages.Add(new ShipHitMessage(null));
-                }
-
-                Hit();
-                break;
-            default:
-                throw new InvalidOperationException($"Received a message while in {_gameState} state. We should not receive a message at this time.");
+            Setup();
+            return;
         }
 
-        return Task.CompletedTask;
+        if (success)
+        {
+            Debug.Assert(_playspace.HitOther(true, _prevHit.Value));
+
+            // We hit something. Focus on the adjacent cells and hope we kill a ship
+            if (!shipSunk)
+            {
+                AssignPriorityCells(_prevHit.Value);
+            }
+            else
+            {
+                // We sunk a ship. Reset the priority cells. Now this is a naive algorithm since theoretically
+                // we could infer that other ships are in the area with other data, but I do not feel like coding
+                // something like that right now.
+                _priorityCells.Clear();
+            }
+
+            return;
+        }
+
+        _playspace.HitOther(false, _prevHit.Value);
+    }
+
+    public (bool hit, ShipType? hitShip, bool surrender) GetHit(int position)
+    {
+        if (_gameState != GameState.AwaitingHit)
+            throw new InvalidOperationException("Invalid game state reached: Got hit while not waiting for hit.");
+
+        var hit = false;
+        var surrender = false;
+        ShipType? ship = null;
+        _gameState = GameState.AwaitingToHitPlayer;
+
+        if (!_playspace.Hit(position, out var hitShip)) return (hit, ship, surrender);
+
+        hit = true;
+
+        if (hitShip.Health > 0) return (hit, ship, surrender);
+
+        _remainingShips -= 1;
+        ship = hitShip.ShipType;
+
+        if (_remainingShips > 0) return (hit, ship, surrender);
+
+        surrender = true;
+        Setup();
+        return (hit, ship, surrender);
     }
 
     private void AssignPriorityCells(int idx)
@@ -129,8 +116,11 @@ public sealed class AIOpponent : IOpponent
         _priorityCells.Add(idx - BattleshipGrid.Columns);
     }
 
-    private void Hit()
+    public int HitPlayer()
     {
+        if (_gameState != GameState.AwaitingToHitPlayer)
+            throw new InvalidOperationException("Invalid game state reached: Got to hit player while not waiting to hit player.");
+
         int idx;
         while (true)
         {
@@ -148,9 +138,9 @@ public sealed class AIOpponent : IOpponent
             if (_playspace.CanHitOther(idx))
                 break;
         }
-        _messages.Add(new HitMessage(idx));
         _prevHit = idx;
         _gameState = GameState.AwaitingHitResult;
+        return _prevHit.Value;
     }
 
     private void Setup()
@@ -180,7 +170,6 @@ public sealed class AIOpponent : IOpponent
         }
         
         _gameState = GameState.AwaitingHit;
-        _messages.Add(new SetupCompleteMessage());
     }
 
     private void SpawnRandom(ShipType shipType)
@@ -194,15 +183,5 @@ public sealed class AIOpponent : IOpponent
             if (_playspace.TryPlace(ship, orientation))
                 return;
         }
-    }
-
-    public Task<OpponentMessage> GetMessage()
-    {
-        if (_messages.Count == 0)
-            throw new InvalidOperationException("Message was received when it was not expected.");
-
-        var next = _messages[0];
-        _messages.RemoveAt(0);
-        return Task.FromResult(next);
     }
 }

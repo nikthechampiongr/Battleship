@@ -1,8 +1,6 @@
 using System;
 using System.Diagnostics;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading.Tasks; using Avalonia.Controls; using Avalonia.Interactivity;
+using Avalonia.Controls; using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Battleship.Db;
 using Battleship.Model;
@@ -12,7 +10,7 @@ namespace Battleship;
 
 public partial class BattleshipWindow : Window
 {
-    private IOpponent _opponent;
+    private AIOpponent _opponent;
 
     public const int CarrierCapacity = 1;
     public const int DestroyerCapacity = 2;
@@ -28,18 +26,15 @@ public partial class BattleshipWindow : Window
 
     private DispatcherTimer _gameTimer;
     private TimeSpan _gametime;
-    private uint _turns = 0;
-
-    private bool _startFirst = false;
+    private uint _turns;
 
     private Orientation _orientation = Orientation.Horizontal;
 
-    public BattleshipWindow(IOpponent opponent, bool startFirst)
+    public BattleshipWindow()
     {
         InitializeComponent();
 
-        _opponent = opponent;
-        _startFirst = startFirst;
+        _opponent = new AIOpponent();
 
         _gameTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, SetTime);
         _gameTimer.IsEnabled = false;
@@ -111,32 +106,16 @@ public partial class BattleshipWindow : Window
         BeginGame();
     }
 
-    private async void BeginGame()
+    private void BeginGame()
     {
         if (HitButton == null)
             return;
-
-        if (!(await Send(new SetupCompleteMessage())))
-            return;
-
-        var response = await Receive();
-
-        Debug.Assert(response is { success: true, msg: SetupCompleteMessage });
-        if (!response.success)
-            return;
-
 
         _gametime = DateTime.Now.TimeOfDay;
         _gameTimer.IsEnabled = true;
         _turns = 0;
 
         HitButton.IsVisible = true;
-
-        if (!_startFirst)
-        {
-            HitButton.IsEnabled = false;
-            ExpectHit();
-        }
     }
 
     private bool PlaceShip(ShipType ty)
@@ -149,7 +128,7 @@ public partial class BattleshipWindow : Window
         return PlayerGrid.TryPlace(ship, _orientation);
     }
 
-    private async void Hit(object? sender, RoutedEventArgs e)
+    private void Hit(object? sender, RoutedEventArgs e)
     {
         var selected = PlayerGrid?.Selected;
 
@@ -159,123 +138,64 @@ public partial class BattleshipWindow : Window
         HitButton.IsEnabled = false;
         _turns += 1;
 
-        await Send(new HitMessage(selected.Value));
+        var results = _opponent.GetHit(selected.Value);
 
-        var response = await Receive();
+        PlayerGrid?.HitOther(results.hit, selected.Value);
 
-        if (!response.success)
-            return;
-
-        switch (response.msg)
+        if (results.surrender)
         {
-            case ShipHitMessage hitMessage:
-                if (hitMessage.SunkShip != null)
-                    SetAnnouncement($"Βυθίστηκε το {hitMessage.SunkShip.Value.GetString()} του αντίπαλου!", false);
-                PlayerGrid?.HitOther(true, selected.Value);
-                break;
-            case SurrenderMessage surrender:
-                SetAnnouncement($"Νίκη! Βυθίστηκε το {surrender.SunkShip.GetString()} του αντίπαλου", true);
-                Reset(Outcome.Victory);
+            Debug.Assert(results.hitShip != null);
+
+            if (results.hitShip == null)
                 return;
-            case HitMissedMessage _:
-                PlayerGrid?.HitOther(false, selected.Value);
-                break;
-            default:
-                Debug.Fail($"Got unexpected message while awaiting a hit: {response.msg?.GetType()}");
-                SetAnnouncement("Ο αντίπαλος έστειλε μη έγκυρη απάντηση. Το παιχνίδι είναι ισοπαλία", true);
-                Reset(Outcome.Draw);
-                break;
+
+            SetAnnouncement($"Νίκη! Βυθίστηκε το {results.hitShip} του αντίπαλου", true);
+            Reset(Outcome.Victory);
+            return;
         }
+
+        if (results.hitShip != null)
+            SetAnnouncement($"Βυθίστηκε το {results.hitShip.Value.GetString()} του αντίπαλου!", false);
 
         ExpectHit();
     }
 
-    private async void ExpectHit()
+    private void ExpectHit()
     {
-        if (HitButton == null)
+        if (HitButton == null || PlayerGrid == null)
             return;
 
-        var response = await Receive();
+        var results = _opponent.HitPlayer();
 
-        if (!response.success)
-            return;
-
-        Debug.Assert(response is { success: true, msg: HitMessage });
-
-        if (response.msg is not HitMessage hit)
-        {
-            SetAnnouncement("Ο αντίπαλος έστειλε μη έγκυρη απάντηση. Το παιχνίδι είναι ισοπαλία", true);
-            Reset(Outcome.Draw);
-            return;
-        }
-
-        // Null coercion. It should not be possible for this to be null since we have a selected cell.
-        if (PlayerGrid!.Hit(hit.Position, out var damaged))
-
+        if (PlayerGrid!.Hit(results, out var damaged))
         {
             if (damaged.Health <= 0)
             {
                 _remainingShips -= 1;
                 if (_remainingShips <= 0)
                 {
-                    if (!(await Send(new SurrenderMessage(damaged.ShipType))))
-                        return;
+                    _opponent.GetHitResult(true, true, true);
                     SetAnnouncement($"Ήττα! Βυθίστηκε το {damaged.ShipType.GetString()} μου!", true);
                     Reset(Outcome.Defeat);
                     return;
                 }
 
                 SetOpponentAnnouncement($"Βυθίστηκε το {damaged.ShipType.GetString()} μου!");
-                if (!await Send(new ShipHitMessage(damaged.ShipType)))
-                    return;
+                _opponent.GetHitResult(true, true, false);
             }
             else
             {
-                if (!(await Send(new ShipHitMessage(null))))
-                    return;
+                _opponent.GetHitResult(true, false, false);
             }
         }
         else
         {
-            if (!(await Send(new HitMissedMessage())))
-                return;
+            _opponent.GetHitResult(false, false, false);
         }
 
         HitButton.IsEnabled = true;
     }
 
-    // This right now seems useless, but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
-    private async Task<bool> Send(OpponentMessage msg)
-    {
-        try {
-            await _opponent.SendMessage(msg);
-        }
-        catch (Exception _)
-        {
-            SetAnnouncement("Ο αντίπαλος αποσυνδέθηκε. Το παιχνίδι είναι ισοπαλία.", true);
-            Reset(Outcome.Draw);
-            return false;
-        }
-
-        return true;
-    }
-
-    // This right now seems useless, but we are preparing to deal with exceptions regarding the network when we implement multiplayer.
-    private async Task<(bool success, OpponentMessage? msg)> Receive()
-    {
-        OpponentMessage? msg;
-        try
-        {
-            msg = await _opponent.GetMessage();
-        }
-        catch (Exception _)
-        {
-            SetAnnouncement("Ο αντίπαλος αποσυνδέθηκε. Το παιχνίδι είναι ισοπαλία.", true);
-            return (false, null);
-        }
-
-        return (true, msg);
-    }
 
     private void Reset(Outcome outcome)
     {

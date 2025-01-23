@@ -32,43 +32,10 @@ public partial class MainWindow : Window
         TimePlayedText.Text =  $"Ώρες: {stats.TimePlayed}";
     }
 
-    private async void ConnectButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (AddressField?.Text is null or "")
-            return;
-
-        var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-
-        var endpoint = new DnsEndPoint(AddressField.Text, 3775);
-
-        socket.Connect(endpoint);
-
-        var opponent = new NetOpponent(socket);
-
-        await Start(opponent, false);
-        socket.Shutdown(SocketShutdown.Both);
-    }
-
-    private async void HostButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-
-        socket.Bind(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 3775));
-
-        socket.Listen();
-
-        var conn = socket.Accept();
-
-        var opponent = new NetOpponent(conn);
-
-        await Start(opponent, true);
-        conn.Shutdown(SocketShutdown.Both);
-    }
-
-    private async Task Start(IOpponent opponent, bool startFirst)
+    private async void Start(object? sender, RoutedEventArgs routedEventArgs)
     {
 
-        var battleship = new BattleshipWindow(opponent, startFirst)
+        var battleship = new BattleshipWindow()
         {
             Width = 850,
             Height = 700,
@@ -77,12 +44,5 @@ public partial class MainWindow : Window
 
         await battleship.ShowDialog(this);
         SetStats();
-    }
-
-    private void OfflineButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        var opponent = new AIOpponent();
-
-        Start(opponent, true);
     }
 }
