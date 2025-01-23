@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Battleship.Db;
 using Battleship.Opponent;
 
 namespace Battleship;
@@ -13,6 +14,22 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
+        SetStats();
+    }
+
+    private async void SetStats()
+    {
+        if (WinText == null || LossText == null || TotalText == null || TurnsPlayedText == null || TimePlayedText == null)
+            return;
+
+        var stats = await DbManager.GetStats();
+
+        WinText.Text = $"Νίκες: {stats.Wins.ToString()}";
+        LossText.Text = $"Ήττες: {stats.Losses.ToString()}" ;
+        TotalText.Text = $"Παιχνίδια: {stats.TotalGames.ToString()}";
+        TurnsPlayedText.Text = $"Προσπάθειες: {stats.TurnsPlayed.ToString()}";
+        TimePlayedText.Text =  $"Ώρες: {stats.TimePlayed}";
     }
 
     private async void ConnectButton_OnClick(object? sender, RoutedEventArgs e)
@@ -59,6 +76,7 @@ public partial class MainWindow : Window
         };
 
         await battleship.ShowDialog(this);
+        SetStats();
     }
 
     private void OfflineButton_OnClick(object? sender, RoutedEventArgs e)

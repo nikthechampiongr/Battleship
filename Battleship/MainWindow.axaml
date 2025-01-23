@@ -2,11 +2,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="800"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="400"
         x:Class="Battleship.MainWindow"
         Title="MainWindow">
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <Button Name="OfflineButton" Click="OfflineButton_OnClick" Margin="1">Παίξε με AI</Button>
+                <Button HorizontalAlignment="Center" Name="OfflineButton" Click="OfflineButton_OnClick" Margin="1">Παίξε με AI</Button>
                 <Separator/>
                 <Button Click="HostButton_OnClick" Name="HostButton" Margin="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"><Label HorizontalAlignment="Center">Host</Label></Button>
                 <Separator/>
@@ -15,6 +15,7 @@
                 <Separator/>
                 <TextBlock Name="WinText" HorizontalAlignment="Center"/>
                 <TextBlock Name="LossText" HorizontalAlignment="Center"/>
+                <TextBlock Name="TotalText" HorizontalAlignment="Center"/>
                 <TextBlock Name="TimePlayedText" HorizontalAlignment="Center"/>
                 <TextBlock Name="TurnsPlayedText" HorizontalAlignment="Center"/>
         </StackPanel>
