@@ -149,7 +149,7 @@ public partial class BattleshipWindow : Window
             if (results.hitShip == null)
                 return;
 
-            SetAnnouncement($"Νίκη! Βυθίστηκε το {results.hitShip} του αντίπαλου", true);
+            SetAnnouncement($"Νίκη! Βυθίστηκε το {results.hitShip.Value.GetString()} του αντίπαλου", true);
             Reset(Outcome.Victory);
             return;
         }
