@@ -25,7 +25,7 @@ public partial class BattleshipWindow : Window
     private int _remainingShips = CarrierCapacity + DestroyerCapacity + BattleshipCapacity + SubmarineCapacity;
 
     private DispatcherTimer _gameTimer;
-    private TimeSpan _gametime;
+    private TimeSpan _gameTime;
     private uint _turns;
 
     private Orientation _orientation = Orientation.Horizontal;
@@ -36,8 +36,10 @@ public partial class BattleshipWindow : Window
 
         _opponent = new AIOpponent();
 
-        _gameTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, SetTime);
-        _gameTimer.IsEnabled = false;
+        _gameTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, SetTime)
+            {
+                IsEnabled = false
+            };
     }
 
     private void SetTime(object? sender, EventArgs e)
@@ -45,7 +47,7 @@ public partial class BattleshipWindow : Window
         if (GameTime == null)
             return;
 
-        var time = DateTime.Now.TimeOfDay - _gametime;
+        var time = DateTime.Now.TimeOfDay - _gameTime;
         GameTime.Text = $"{time.Minutes:00}:{time.Seconds:00}";
     }
 
@@ -111,7 +113,7 @@ public partial class BattleshipWindow : Window
         if (HitButton == null)
             return;
 
-        _gametime = DateTime.Now.TimeOfDay;
+        _gameTime = DateTime.Now.TimeOfDay;
         _gameTimer.IsEnabled = true;
         _turns = 0;
 
@@ -197,7 +199,7 @@ public partial class BattleshipWindow : Window
     }
 
 
-    private void Reset(Outcome outcome)
+    private async void Reset(Outcome outcome)
     {
         PlayerGrid?.Reset();
         _remainingCarriers = CarrierCapacity;
@@ -219,7 +221,7 @@ public partial class BattleshipWindow : Window
         if (outcome == Outcome.Draw)
             return;
 
-        DbManager.InsertGame(outcome == Outcome.Victory, _turns, DateTime.Now.TimeOfDay - _gametime);
+        await DbManager.InsertGame(outcome == Outcome.Victory, _turns, DateTime.Now.TimeOfDay - _gameTime);
     }
 
     private void ChangeOrientation(object? sender, RoutedEventArgs e)

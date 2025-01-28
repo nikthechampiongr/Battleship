@@ -29,7 +29,7 @@ public partial class MainWindow : Window
         LossText.Text = $"Ήττες: {stats.Losses.ToString()}" ;
         TotalText.Text = $"Παιχνίδια: {stats.TotalGames.ToString()}";
         TurnsPlayedText.Text = $"Προσπάθειες: {stats.TurnsPlayed.ToString()}";
-        TimePlayedText.Text =  $"Ώρες: {stats.TimePlayed}";
+        TimePlayedText.Text =  $"Ώρα: {stats.TimePlayed:hh\\:mm\\:ss}";
     }
 
     private async void Start(object? sender, RoutedEventArgs routedEventArgs)

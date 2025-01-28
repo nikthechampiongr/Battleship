@@ -78,7 +78,7 @@ public static class DbManager
         public bool PlayerWon;
         public uint Turns;
         //This is stupid but for some reason this can't be mapped properly from a string from Dapper's Query function.
-        public string Duration;
+        public string Duration = TimeSpan.Zero.ToString();
     }
 }
 
