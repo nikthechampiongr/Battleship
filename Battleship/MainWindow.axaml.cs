@@ -1,11 +1,7 @@
-using System.Net;
-using System.Net.Sockets;
-using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Battleship.Db;
-using Battleship.Opponent;
 
 namespace Battleship;
 

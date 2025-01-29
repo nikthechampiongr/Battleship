@@ -221,6 +221,9 @@ public partial class BattleshipWindow : Window
         if (outcome == Outcome.Draw)
             return;
 
+        // Hack to show stats
+        SetOpponentAnnouncement($"Προσπάθειες: {_turns}\nΏρα: {DateTime.Now.TimeOfDay:hh\\:mm\\:ss}");
+
         await DbManager.InsertGame(outcome == Outcome.Victory, _turns, DateTime.Now.TimeOfDay - _gameTime);
     }
 
